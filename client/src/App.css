@@ -1,0 +1,37 @@
+.App-header {
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  border-bottom: 1px solid rgba(234, 234, 234, 0.8);
+  width: 100%;
+}
+
+.auto {
+  flex: auto;
+}
+
+.App-header h1 {
+  font-size: 48px;
+  font-weight: 700;
+  color: #49aaf4;
+  margin: 2rem;
+}
+
+.App-header span {
+  display: block;
+  margin: 2rem 2rem 1.25rem 2rem;
+  color: inherit;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.App-card {
+  margin: 0 auto;
+  width: 95%;
+}
+
+.App-card__inner {
+  background: #fff;
+  width: 100%;
+  margin-top: 2rem;
+}
