@@ -1,6 +1,6 @@
 import React from 'react'
 import { Card, Table } from 'antd'
-import fetchNumbers from './api/NumberAPI';
+import { fetchNumbers}  from './api/NumberAPI';
 import './App.css'
 //import { threadId } from 'worker_threads';
 

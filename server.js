@@ -1,6 +1,7 @@
 const express = require("express");
 const fs = require("fs");
 const sqlite3 = require("sqlite3").verbose();
+const bodyParser = require('body-parser');
 
 const db = new sqlite3.Database("./appDB.db", err => {
   if (err) {
@@ -13,10 +14,16 @@ const app = express();
 
 app.set("port", process.env.PORT || 3001);
 
+app.use(bodyParser.json());
+
 // Express only serves static assets in production
 if (process.env.NODE_ENV === "production") {
   app.use(express.static("client/build"));
 }
+
+app.listen(app.get("port"), () => {
+  console.log(`Find the server at: http://localhost:${app.get("port")}/`); // eslint-disable-line no-console
+});
 
 app.get("/api/numbers", (req, res) => {
   const page = parseInt(req.query.page) ? parseInt(req.query.page) : 0;
@@ -58,8 +65,6 @@ app.get("/api/numbers", (req, res) => {
     sql += " LIMIT " + size;
   }
 
-  console.log(sql);
-
   db.all(sql, (err, rows) => {
     if (err) {
       console.error(err.message);
@@ -93,6 +98,47 @@ app.get("/api/numbers", (req, res) => {
   });
 });
 
+app.put('/api/numbers/:id', (req, res) => {
+  const id = parseInt(req.param.id);
+  const updatedNumber = req.body;
+  console.log(req.body);
+
+  // TODO: Would validate updatedNumber with validator here...
+  if(!updatedNumber.id || !parseInt(updatedNumber.id)) {
+    return res.json({
+      error: true,
+      message: "Invalid format: No id"
+    });
+  }
+  if(!updatedNumber.number || !parseInt(updatedNumber.number)) {
+    return res.json({
+      error: true,
+      message: "Invalid format: No number"
+    });
+  }
+
+  let sql = `
+    UPDATE Numbers
+    SET number=${updatedNumber.number}
+    WHERE id=${updatedNumber.id}
+  `
+
+  db.all(sql, (err, row) => {
+    if (err) {
+      console.error(err.message);
+      return res.json({
+        error: true,
+        message: err.message
+      });
+    }
+
+    return res.json({
+      error: false,
+      message: updatedNumber
+    });
+  });
+});
+
 app.get("/api/users", (req, res) => {
   db.all(`SELECT * FROM Users`, (err, rows) => {
     if (err) {
@@ -118,8 +164,4 @@ app.get("/api/numberconfiguration", (req, res) => {
     }
     return res.json(rows);
   });
-});
-
-app.listen(app.get("port"), () => {
-  console.log(`Find the server at: http://localhost:${app.get("port")}/`); // eslint-disable-line no-console
 });

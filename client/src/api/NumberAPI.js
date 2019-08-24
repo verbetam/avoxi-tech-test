@@ -39,4 +39,33 @@ async function fetchNumbers(params = {}) {
   }
 }
 
-export default fetchNumbers;
+async function updateNumber(number) {
+  try {
+    let uri = buildAPIURI('/numbers');
+    uri += '/' + number.id;
+
+    const data = { ...number };
+    let res = await fetch(uri, {
+      headers: {
+        "content-type": "application/json; charset=UTF-8"
+      },
+      body:data,
+      method:"PUT"
+    }).then(res => res.json());
+
+    if(res.error) {
+      console.log("Error fetching numbers: ", res.message);
+      return res;
+    }
+
+    return {
+      number: res.message
+    }
+  }
+  catch (e) {
+    console.log(e);
+    return e;
+  }
+}
+
+export { fetchNumbers, updateNumber };
