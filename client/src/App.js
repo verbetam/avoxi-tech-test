@@ -1,6 +1,6 @@
 import React from 'react'
 import { Card, Table } from 'antd'
-import { parsePhoneNumberFromString } from 'libphonenumber-js';
+import fetchNumbers from './api/NumberAPI';
 import './App.css'
 //import { threadId } from 'worker_threads';
 
@@ -55,38 +55,53 @@ class App extends React.Component {
     this.setState({
       pagination: pager
     });
-    this.fetchData({
-      size: pagination.pageSize,
-      page: pagination.current
-    });
+    const page = pagination.current;
+    const size = pagination.pageSize;
+
+    // If we do not have all items for the requests, then fetch the items from the api.
+    if(!this.verifyLocalRange((page - 1) * size, size, pagination.total)) {
+      this.fetchData({
+        size: size,
+        page: page
+      });
+    }
+  }
+
+  verifyLocalRange = (start, range, length) => {
+    const data = this.state.numbers;
+    for(let i = start; i < start + range && i < length; i++) {
+      if(!data[i]) {
+        return false;
+      }
+    }
+    return true;
   }
 
   async fetchData(params = {}) {
     this.setState({ loading: true });
     try {
-      let uri = '/api/numbers?page=';
-      uri += encodeURIComponent(params.page ? params.page : 1);
-      uri += "&size="
-      uri += encodeURIComponent(params.size ? params.size : 10);
+      const page = params.page ? params.page : 1
+      const size = params.size ? params.size : 10
 
-      let res = await fetch(uri).then(res => res.json());
+      let data = await fetchNumbers({
+        page: page,
+        size: size
+      });
 
-      if (res.error) {
-        console.log("Error fetching numbers: ", res.message);
+      if (data.error) {
+        console.log("Error fetching numbers: ", data.message);
       } else {
-        const numbers = res.message;
+        const numbers = this.state.numbers;
 
-        for (let number of numbers) {
-          if (number.first_name) number.user = number.first_name + " " + number.last_name;
-          const phoneNumber = parsePhoneNumberFromString("+" + number.number.toString());
-          if (phoneNumber) {
-            number.number = phoneNumber.formatInternational();
-            number.country = phoneNumber.country;
-          }
+        // Copy the number references into the local data.
+        for (let i = 0; i < data.numbers.length; i++) {
+          let number = data.numbers[i];
+          numbers[size * (page - 1) + i] = number;
         }
 
+        // Rebuild the pagination for the state.
         const pagination = {...this.state.pagination};
-        pagination.total = res.total;
+        pagination.total = data.total;
 
         this.setState({
           numbers: numbers,

@@ -87,7 +87,6 @@ app.get("/api/numbers", (req, res) => {
       return res.json({
         error: false,
         message: rows,
-        pages: pages,
         total: count
       });
     });
